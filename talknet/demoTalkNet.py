@@ -654,7 +654,6 @@ def main(
 	files = glob.glob(os.path.join(pycropPath, "*.avi"))
 	files = [f.replace("\\", "/") for f in files]
 	files.sort()
-	print("Filesss: ", files)
 	scores = evaluate_network(s, files)
 	savePath = os.path.join(pyworkPath, 'scores.pckl')
 	with open(savePath, 'wb') as fil:
