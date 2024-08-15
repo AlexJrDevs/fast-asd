@@ -96,7 +96,7 @@ class VideoTalkingTracker:
     def process(
         self,
         file: str,
-        speed_boost: bool = True,
+        speed_boost: bool = False,
         max_num_faces: int = 5,
         return_scene_cuts_only: bool = False,
         return_scene_data: bool = False,
@@ -116,7 +116,6 @@ class VideoTalkingTracker:
         :param processing_fps: The framerate to run object detection at for speaker detection. Defaults to 2.
         :param face_size_threshold: A threshold that determines the minimum size of a face to run speaker detection on. Defaults to 0.5. Lower values allow for smaller faces to be used.
         '''
-        all_results = []
 
         # handle webm files by converting them to mp4
         if file.endswith(".webm"):
@@ -439,6 +438,7 @@ class VideoTalkingTracker:
             print("Processing video...")
 
             frame_count = 0
+            all_frames = []
             for segment_index, segment in enumerate(segments):
                 print(f"Processing scene {segment_index} [{segment.start:.2f}s - {segment.end:.2f}s] / {end_time:.2f}s")
                 start = segment.start
@@ -562,16 +562,35 @@ class VideoTalkingTracker:
                             "faces": out_boxes,
                         })
                     if len(batch_frames) == 100:
-                        all_results.extend(batch_frames)
+                        all_frames.extend(batch_frames)
                         batch_frames = []
                     if return_scene_cuts_only:
-                        all_results.extend(batch_frames)
+                        all_frames.extend(batch_frames)
                         break
                     frame_count += 1
                 if not return_scene_cuts_only and batch_frames:
-                    all_results.extend(batch_frames)
+                    all_frames.extend(batch_frames)
 
-        return all_results
+            # Ensure all futures are completed
+            self.wait_for_all_futures(object_detection_futures, speaker_detection_futures)
+
+            return all_frames
+        
+    def wait_for_all_futures(self, object_detection_futures, speaker_detection_futures):
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            for i, future in enumerate(object_detection_futures):
+                if "result" not in future:
+                    try:
+                        object_detection_futures[i]["result"] = future["future"].result()
+                    except Exception as e:
+                        print(f"WARNING: Object detection failed for segment {i}")
+
+            for i, future in enumerate(speaker_detection_futures):
+                if future["future"] and "result" not in future:
+                    try:
+                        speaker_detection_futures[i]["result"] = future["future"].result()
+                    except Exception as e:
+                        print(f"WARNING: Speaker detection failed for segment {i}")
         
 
 
