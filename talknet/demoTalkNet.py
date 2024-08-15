@@ -17,11 +17,13 @@ from ..talknet.talkNet import talkNet
 warnings.filterwarnings("ignore")
 LOCAL_MACHINE = True
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+model_dir = os.path.join(parent_dir, 'models')
+save_path = os.path.join(script_dir, 'save')
+
 if LOCAL_MACHINE:
 	# Define the model directory and paths
-	script_dir = os.path.dirname(os.path.abspath(__file__))
-	parent_dir = os.path.dirname(script_dir)
-	model_dir = os.path.join(parent_dir, 'models')
 	pretrained_model_path = os.path.join(model_dir, 'pretrain_TalkSet.model')
 
 	# Check if the model directory exists
@@ -35,7 +37,6 @@ if LOCAL_MACHINE:
 
 else:
 	pretrained_model_path = "/root/.cache/models/pretrain_TalkSet.model"
-save_path = "save/"
 data_loader_thread = 10
 face_detection_scale = 0.25
 min_track = 10 # Number of min frames for each shot
