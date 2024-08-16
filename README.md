@@ -4,6 +4,7 @@ Run fast-asd on local with gpu / cpu ( It automatically checks to see if your gp
 Example Usage: 
 
 file = path/to/your/file
+
 videotracker = VideoTalkingTracker()
 
 data = videotrack.process(file)
